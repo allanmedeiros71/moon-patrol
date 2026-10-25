@@ -9,7 +9,7 @@ import (
 
 	"github.com/allanmedeiros/moonpatrol/internal/buildinfo"
 	"github.com/allanmedeiros/moonpatrol/internal/game"
-	"github.com/allanmedeiros/moonpatrol/internal/input"
+	"github.com/allanmedeiros/moonpatrol/internal/input/inputebiten"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -45,7 +45,7 @@ func run(args []string, stdout io.Writer, runGame func(ebiten.Game) error) int {
 		Seed:     opts.seed,
 		Options:  game.Options{Windowed: opts.windowed},
 		Window:   game.EbitenWindow{},
-		Poller:   &input.EbitenPoller{},
+		Poller:   &inputebiten.EbitenPoller{},
 		Renderer: game.NopRenderer{},
 		Stats:    func() (float64, float64) { return ebiten.ActualTPS(), ebiten.ActualFPS() },
 	})
