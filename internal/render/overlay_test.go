@@ -35,3 +35,10 @@ func TestOverlayNoActionsNoPads(t *testing.T) {
 		t.Errorf("got %q", got)
 	}
 }
+
+func TestOverlayZeroFPS(t *testing.T) {
+	got := OverlayLines(OverlayInfo{FPS: 0, ScreenW: 1920, ScreenH: 1080})
+	if got[0] != "TPS 0.0  FPS 0.0" {
+		t.Errorf("got %q", got[0])
+	}
+}
