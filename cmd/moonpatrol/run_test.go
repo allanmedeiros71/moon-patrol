@@ -7,6 +7,9 @@ import (
 	"testing"
 
 	"github.com/hajimehoshi/ebiten/v2"
+
+	"github.com/allanmedeiros/moonpatrol/internal/game"
+	"github.com/allanmedeiros/moonpatrol/internal/input"
 )
 
 func fakeRun(got *ebiten.Game, err error) func(ebiten.Game) error {
@@ -31,29 +34,24 @@ func TestRunVersion(t *testing.T) {
 }
 
 func TestRunOptions(t *testing.T) {
-	tests := []struct {
-		name string
-		args []string
-		want options
-	}{
-		{"defaults", nil, options{windowed: false, seed: 1}},
-		{"windowed", []string{"-windowed"}, options{windowed: true, seed: 1}},
-		{"seed", []string{"-seed", "7"}, options{windowed: false, seed: 7}},
+	seeds := map[string]uint64{}
+	for _, args := range [][]string{nil, {"-windowed"}, {"-seed", "7"}} {
+		var g ebiten.Game
+		if code := run(args, &bytes.Buffer{}, fakeRun(&g, nil)); code != 0 {
+			t.Fatalf("code = %d, want 0", code)
+		}
+		gg, ok := g.(*game.Game)
+		if !ok {
+			t.Fatalf("game type = %T", g)
+		}
+		gg.World().Step(input.Frame{})
+		seeds[strings.Join(args, " ")] = gg.World().Snapshot().Noise
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var g ebiten.Game
-			if code := run(tt.args, &bytes.Buffer{}, fakeRun(&g, nil)); code != 0 {
-				t.Fatalf("code = %d, want 0", code)
-			}
-			bg, ok := g.(blankGame)
-			if !ok {
-				t.Fatalf("game type = %T", g)
-			}
-			if bg.opts != tt.want {
-				t.Errorf("opts = %+v, want %+v", bg.opts, tt.want)
-			}
-		})
+	if seeds[""] != seeds["-windowed"] {
+		t.Error("default seed differs between runs")
+	}
+	if seeds[""] == seeds["-seed 7"] {
+		t.Error("-seed did not change the world")
 	}
 }
 
@@ -82,19 +80,4 @@ func TestRunGameErrors(t *testing.T) {
 	if code := run([]string{"-windowed"}, &bytes.Buffer{}, fakeRun(&g, ebiten.Termination)); code != 0 {
 		t.Errorf("termination code = %d, want 0", code)
 	}
-}
-
-func TestBlankGameLayout(t *testing.T) {
-	w, h := blankGame{}.Layout(640, 360)
-	if w != 640 || h != 360 {
-		t.Errorf("Layout = %d,%d", w, h)
-	}
-}
-
-func TestBlankGameUpdateDraw(t *testing.T) {
-	g := blankGame{}
-	if err := g.Update(); err != nil {
-		t.Errorf("Update() = %v, want nil with no key pressed", err)
-	}
-	g.Draw(nil)
 }
