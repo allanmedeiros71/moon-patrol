@@ -33,3 +33,5 @@ Flags: `-windowed`, `-seed <n>` (default 1), `-version`.
 | Fire | Ctrl |
 | Pause | P |
 | Quit | Esc |
+| Debug overlay on/off | F3 |
+| Fullscreen on/off | F11 or Alt+Enter |
