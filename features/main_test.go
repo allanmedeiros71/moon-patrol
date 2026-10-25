@@ -16,7 +16,7 @@ import (
 // feature file, in its own *_steps_test.go file and called from initializeScenario.
 // Step patterns are anchored (^...$), and a step text already defined by another
 // file is reused, never registered twice.
-var doneTags = []string{"@T-01-02", "@T-01-03", "@T-01-04", "@T-01-05", "@T-01-06"}
+var doneTags = []string{"@T-01-02", "@T-01-03", "@T-01-04", "@T-01-05", "@T-01-06", "@T-01-07"}
 
 func tags() string {
 	if t := os.Getenv("GODOG_TAGS"); t != "" {
@@ -34,6 +34,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	initLetterbox(sc)
 	initDisplay(sc)
 	initGameLoop(sc)
+	initScene(sc)
 }
 
 // TestFeatures runs the Gherkin scenarios of the merged tasks.
