@@ -8,6 +8,8 @@ import (
 	"os"
 
 	"github.com/allanmedeiros/moonpatrol/internal/buildinfo"
+	"github.com/allanmedeiros/moonpatrol/internal/game"
+	"github.com/allanmedeiros/moonpatrol/internal/input/inputebiten"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -15,25 +17,6 @@ import (
 type options struct {
 	windowed bool
 	seed     int64
-}
-
-// blankGame is a minimal placeholder game: a black screen that quits on Esc.
-type blankGame struct{ opts options }
-
-// Update ends the game when Esc is pressed.
-func (blankGame) Update() error {
-	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
-		return ebiten.Termination
-	}
-	return nil
-}
-
-// Draw leaves the screen black.
-func (blankGame) Draw(*ebiten.Image) {}
-
-// Layout returns the outside size unchanged.
-func (blankGame) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return outsideWidth, outsideHeight
 }
 
 // run parses args, starts the game through runGame and returns the exit code.
@@ -55,10 +38,18 @@ func run(args []string, stdout io.Writer, runGame func(ebiten.Game) error) int {
 		_, _ = fmt.Fprintln(stdout, buildinfo.String())
 		return 0
 	}
-	if !opts.windowed {
-		ebiten.SetFullscreen(true)
-	}
-	if err := runGame(blankGame{opts: opts}); err != nil && !errors.Is(err, ebiten.Termination) {
+	ebiten.SetWindowTitle("Moon Patrol")
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	ebiten.SetTPS(game.TPS)
+	g := game.New(game.Config{
+		Seed:     opts.seed,
+		Options:  game.Options{Windowed: opts.windowed},
+		Window:   game.EbitenWindow{},
+		Poller:   &inputebiten.EbitenPoller{},
+		Renderer: game.NopRenderer{},
+		Stats:    func() (float64, float64) { return ebiten.ActualTPS(), ebiten.ActualFPS() },
+	})
+	if err := runGame(g); err != nil && !errors.Is(err, ebiten.Termination) {
 		_, _ = fmt.Fprintln(os.Stderr, "moonpatrol:", err)
 		return 1
 	}
